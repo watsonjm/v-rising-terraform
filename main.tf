@@ -131,12 +131,12 @@ resource "aws_cloudwatch_metric_alarm" "idle_stop" {
     alarm_actions             = [
         "arn:aws:automate:us-east-2:ec2:stop",
     ]
-    alarm_description         = "Created from EC2 Console"
-    alarm_name                = "awsec2-i-0f22bb4e46c2a3d7c-GreaterThanOrEqualToThreshold-CPUUtilization"
+    alarm_description         = "Auto stop instance when idle."
+    alarm_name                = "${data.aws_instance.vrising_spot.id}-GreaterThanOrEqualToThreshold-CPUUtilization"
     comparison_operator       = "GreaterThanOrEqualToThreshold"
     datapoints_to_alarm       = 1
     dimensions                = {
-        "InstanceId" = "i-0f22bb4e46c2a3d7c"
+        "InstanceId" = data.aws_instance.vrising_spot.id
     }
     evaluation_periods        = 1
     insufficient_data_actions = []
