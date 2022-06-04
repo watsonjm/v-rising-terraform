@@ -27,7 +27,7 @@ variable "public_subnets" {
 }
 variable "public_key_path" {
   type        = string
-  default = null
+  default     = null
   description = "Path to your generated RSA .pub key file."
 }
 variable "subnets" {

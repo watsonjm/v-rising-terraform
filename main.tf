@@ -56,14 +56,15 @@ module "subnets" {
 # EC2
 ###########################
 resource "aws_spot_instance_request" "vrising" {
-  ami           = data.aws_ami.ubuntu.id
-  spot_price    = "0.03"
-  instance_type = "t3.medium"
-  key_name = aws_key_pair.terraform.id
+  ami                         = data.aws_ami.ubuntu.id
+  spot_price                  = "0.03"
+  instance_type               = "t3.medium"
+  key_name                    = aws_key_pair.terraform.id
   associate_public_ip_address = true
   subnet_id                   = module.subnets["public"].subnet_ids[0]
   vpc_security_group_ids      = [aws_security_group.vrising.id]
-  user_data = file("cloudinit.conf")
+  user_data                   = file("cloudinit.conf")
+  wait_for_fulfillment = true
 
   metadata_options {
     http_tokens   = "required"
@@ -80,26 +81,26 @@ resource "aws_security_group" "vrising" {
   vpc_id      = module.vpc.vpc_id
 
   ingress {
-    description      = "SSH from home"
-    from_port        = 22
-    to_port          = 22
-    protocol         = "tcp"
-    cidr_blocks      = ["${chomp(data.http.my_ip.response_body)}/32"]
+    description = "SSH from home"
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["${chomp(data.http.my_ip.response_body)}/32"]
   }
 
   ingress {
-    description      = "V Rising from home"
-    from_port        = 27015
-    to_port          = 27016
-    protocol         = "udp"
-    cidr_blocks      = ["0.0.0.0/0"]
+    description = "V Rising from home"
+    from_port   = 27015
+    to_port     = 27016
+    protocol    = "udp"
+    cidr_blocks = ["0.0.0.0/0"]
   }
 
   egress {
-    from_port        = 0
-    to_port          = 0
-    protocol         = "-1"
-    cidr_blocks      = ["0.0.0.0/0"]
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
   }
 
   tags = {
@@ -127,25 +128,25 @@ data "aws_instance" "vrising_spot" {
 }
 
 resource "aws_cloudwatch_metric_alarm" "idle_stop" {
-    actions_enabled           = true
-    alarm_actions             = [
-        "arn:aws:automate:us-east-2:ec2:stop",
-    ]
-    alarm_description         = "Auto stop instance when idle."
-    alarm_name                = "${data.aws_instance.vrising_spot.id}-GreaterThanOrEqualToThreshold-CPUUtilization"
-    comparison_operator       = "GreaterThanOrEqualToThreshold"
-    datapoints_to_alarm       = 1
-    dimensions                = {
-        "InstanceId" = data.aws_instance.vrising_spot.id
-    }
-    evaluation_periods        = 1
-    insufficient_data_actions = []
-    metric_name               = "CPUUtilization"
-    namespace                 = "AWS/EC2"
-    ok_actions                = []
-    period                    = 900
-    statistic                 = "Maximum"
-    tags                      = {}
-    threshold                 = 0.03
-    treat_missing_data        = "missing"
+  actions_enabled = true
+  alarm_actions = [
+    "arn:aws:automate:us-east-2:ec2:stop",
+  ]
+  alarm_description   = "Auto stop instance when idle."
+  alarm_name          = "${data.aws_instance.vrising_spot.id}-GreaterThanOrEqualToThreshold-CPUUtilization"
+  comparison_operator = "LessThanOrEqualToThreshold"
+  datapoints_to_alarm = 1
+  dimensions = {
+    "InstanceId" = data.aws_instance.vrising_spot.id
+  }
+  evaluation_periods        = 1
+  insufficient_data_actions = []
+  metric_name               = "CPUUtilization"
+  namespace                 = "AWS/EC2"
+  ok_actions                = []
+  period                    = 900
+  statistic                 = "Maximum"
+  tags                      = {}
+  threshold                 = 0.13
+  treat_missing_data        = "missing"
 }
